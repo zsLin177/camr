@@ -1,0 +1,1 @@
+ CUDA_VISIBLE_DEVICES=1 python inference.py --checkpoint outputs/07-26-22_03-04-50/best_checkpoint.h5  --data_directory mrp2020/

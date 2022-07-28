@@ -1,0 +1,5 @@
+[default]
+entity = slzhou
+project = perin
+base_url = https://api.wandb.ai
+

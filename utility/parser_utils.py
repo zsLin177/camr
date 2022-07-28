@@ -237,7 +237,7 @@ def tokenize(data, mode="aggressive"):
         data[key] = tokenizer.clean(data[key])
 
 
-def create_possible_rules(data, applied_function, prune: bool, threads=4):
+def create_possible_rules(data, applied_function, prune: bool, threads=8):
     print(f"Generating possible rules using {threads} CPUs...", flush=True)
     start_time = time.time()
 

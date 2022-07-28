@@ -83,7 +83,6 @@ class EDSParser(AbstractParser):
 
     def initialize(self, args, raw_path, cache_path, companion_path, precomputed_dataset=None):
         print("Caching the dataset...\n", flush=True)
-
         data = utils.load_dataset(raw_path, framework=self.framework)
 
         utils.add_companion(data, companion_path, self.language)
@@ -98,7 +97,7 @@ class EDSParser(AbstractParser):
 
         if precomputed_dataset is None:
             utils.create_possible_rules(data, EDSParser._create_possible_rules, prune=False)
-            rule_set = utils.get_smallest_rule_set(data, approximate=False)
+            rule_set = utils.get_smallest_rule_set(data, approximate=True)
         else:
             utils.create_possible_rules(data, EDSParser._create_possible_rules, prune=False)
             rule_set = set(r[2] for e in precomputed_dataset.values() for n in e["nodes"] for r in n["possible rules"][1])

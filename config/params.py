@@ -54,7 +54,7 @@ class Params:
         # path to the training dataset
         self.training_data = {
             ("amr", "eng"): f"{base_dir}/2020/cf/training/amr.mrp",
-            ("amr", "zho"): f"{base_dir}/2020/cl/training/amr.zho_train.mrp",
+            ("amr", "zho"): f"{base_dir}/conll19_20-amr/conll20-chinese/training/amr.zho.mrp",
             ("drg", "eng"): f"{base_dir}/2020/cf/training/drg.mrp",
             ("drg", "deu"): f"{base_dir}/2020/cl/training/drg.deu_train.mrp",
             ("eds", "eng"): f"{base_dir}/2020/cf/training/eds.mrp",
@@ -67,7 +67,7 @@ class Params:
         # path to the validation dataset
         self.validation_data = {
             ("amr", "eng"): f"{base_dir}/2020/cf/validation/amr.mrp",
-            ("amr", "zho"): f"{base_dir}/2020/cl/training/amr.zho_val.mrp",
+            ("amr", "zho"): f"{base_dir}/conll19_20-amr/conll20-chinese/evaluation/amr.zho.mrp",
             ("drg", "eng"): f"{base_dir}/2020/cf/validation/drg.mrp",
             ("drg", "deu"): f"{base_dir}/2020/cl/training/drg.deu_val.mrp",
             ("eds", "eng"): f"{base_dir}/2020/cf/validation/eds.mrp",
@@ -80,7 +80,7 @@ class Params:
         # path to the test dataset
         self.test_data = {
             ("amr", "eng"): f"{base_dir}/2020/cf/evaluation/input.mrp",
-            ("amr", "zho"): f"{base_dir}/2020/cl/evaluation/input.mrp",
+            ("amr", "zho"): f"{base_dir}/conll19_20-amr/conll20-chinese/evaluation/input.mrp",
             ("drg", "eng"): f"{base_dir}/2020/cf/evaluation/input.mrp",
             ("drg", "deu"): f"{base_dir}/2020/cl/evaluation/input.mrp",
             ("eds", "eng"): f"{base_dir}/2020/cf/evaluation/input.mrp",
@@ -117,7 +117,7 @@ class Params:
     def load(self, args):
         self.init_data_paths(args.data_directory)
         with open(args.config, "r", encoding="utf-8") as f:
-            params = yaml.load(f)
+            params = yaml.load(f, Loader=yaml.FullLoader)
             self.load_state_dict(params)
 
     def save(self, json_path):
