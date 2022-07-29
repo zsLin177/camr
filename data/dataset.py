@@ -136,7 +136,7 @@ class Dataset:
                 "edge attributes": ("edge_attributes", self.edge_attribute_field),
                 "anchor edges": ("anchor", self.anchor_field),
             },
-            filter_pred=lambda example: len(example.input) <= 80,
+            filter_pred=None,
         )
 
         self.val = dataset(

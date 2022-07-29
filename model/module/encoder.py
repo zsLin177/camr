@@ -59,7 +59,7 @@ class Encoder(nn.Module):
         self.n_layers = args.n_encoder_layers
         self.width_factor = args.query_length
 
-        if "roberta" in args.encoder.lower():
+        if "roberta" in args.encoder.lower() and 'chinese' not in args.encoder.lower():
             self.bert = RobertaModel.from_pretrained(args.encoder, output_hidden_states=True)
             if args.encoder_freeze_embedding:
                 self.bert.embeddings.requires_grad_(False)

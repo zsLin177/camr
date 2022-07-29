@@ -79,7 +79,7 @@ class Log:
             if self.losses is not None and self.log_wandb:
                 dictionary = {f"validation {key}": value / self.step for key, value in self.losses.items()}
                 dictionary["epoch"] = self.epoch
-                wandb.log(dictionary)
+                # wandb.log(dictionary)
 
             self.losses = None
             # self._save_model(save_as_best=False, performance=None)
@@ -97,8 +97,8 @@ class Log:
                     results = json.loads(f.readline())
                 if "epoch" in results:
                     epoch = results["epoch"]
-                    wandb.save(full_evaluation_results)
-                    wandb.log(results)
+                    # wandb.save(full_evaluation_results)
+                    # wandb.log(results)
                     os.remove(evaluation_results)
                 else:
                     continue
@@ -126,12 +126,13 @@ class Log:
 
                 results = {f"evaluation {key} f1": f[key] / max(total[key], 1) for key in keys}
                 results["epoch"] = epoch
-                wandb.log(results)
+                # wandb.log(results)
 
                 f1_score = results[f"evaluation all f1"]
                 if f1_score > self.best_f1_score:
                     if self.log_wandb:
-                        wandb.run.summary["best f1 score"] = f1_score
+                        # wandb.run.summary["best f1 score"] = f1_score
+                        raise ValueError('not support wandb since net problem')
                     self.best_f1_score = f1_score
                     self._save_model(save_as_best=True, performance=results)
 
@@ -152,7 +153,9 @@ class Log:
 
         torch.save(state, filename)
         if self.log_wandb:
-            wandb.save(filename)
+            # wandb.save(filename)
+            raise ValueError('not support wandb since net problem')
+
 
     def _train_step(self, batch_size, losses, grad_norm: float, learning_rates) -> None:
         self.total_batch_size += batch_size

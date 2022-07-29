@@ -3,3 +3,4 @@ mtool
 ccl2022
 *.log
 outputs
+wandb

@@ -11,9 +11,9 @@
 def bert_tokenizer(example, tokenizer, encoder):
     if "xlm" in encoder.lower():
         separator = '▁'
-    elif "roberta" in encoder.lower():
+    elif "roberta" in encoder.lower() and 'chinese' not in encoder.lower():
         separator = 'Ġ'
-    elif "bert" in encoder.lower():
+    elif "bert" in encoder.lower() or 'chinese' in encoder.lower():
         separator = '##'
     else:
         raise Exception(f"Unsupported tokenization for {encoder}")

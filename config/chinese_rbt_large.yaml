@@ -1,7 +1,7 @@
 frameworks:
 - ["amr", "zho"]
 
-encoder: xlm-roberta-base
+encoder: /opt/data/private/slzhou/PLMs/chinese-roberta-wwm-ext-large
 accumulation_steps: 1
 batch_size: 8
 query_length: 3

@@ -1,4 +1,4 @@
-accumulation_steps: 4
+accumulation_steps: 2
 activation: relu
 balance_loss_weights: true
 batch_size: 8
@@ -7,7 +7,7 @@ blank_weight: 1.0
 char_embedding: true
 char_embedding_size: 128
 config: config/base_amr.yaml
-data_directory: mrp2020
+data_directory: ccl2022
 decoder_delay_steps: 0
 decoder_learning_rate: 0.0006
 decoder_weight_decay: 1.2e-06
@@ -54,4 +54,4 @@ query_length: 3
 save_checkpoints: true
 wandb_log_mode: null
 warmup_steps: 6000
-workers: 2
+workers: 1
