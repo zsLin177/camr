@@ -8,6 +8,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from cmath import exp
 import json
 import io
 import os
@@ -91,7 +92,11 @@ class EDSParser(AbstractParser):
         utils.anchor_ids_from_intervals(data)
 
         for node, sentence in utils.node_generator(data):
-            assert '│' not in node["label"]
+            try:
+                assert '│' not in node["label"]
+            except:
+                if "label" not in node:
+                    node['label'] = sentence['input'][node['anchors'][0]]
 
         # create relative labels
 

@@ -28,7 +28,7 @@ def parse_arguments():
 
 def evaluate(input_dir, epoch, framework, language, gold_file):
     normalize = {"anchors", "case", "edges", "attributes"}
-    cores = 6
+    cores = 4
 
     with open(f"{input_dir}/prediction_{framework}_{language}.json", encoding="utf8") as f:
         graphs, _ = mtool.main.read_graphs(f, format="mrp", frameworks=[framework], normalize=normalize)
