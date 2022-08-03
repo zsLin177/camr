@@ -61,7 +61,8 @@ class Model(nn.Module):
         decoder_mask = create_padding_mask(batch_size, self.query_length * input_len, decoder_lens, device)
 
         encoder_output, decoder_input = self.encoder(
-            batch["input"], batch["char_form_input"], batch["char_lemma_input"], batch["input_scatter"], input_len, batch["framework"]
+            batch["input"], batch["char_form_input"], batch["char_lemma_input"], batch["input_scatter"], input_len, batch["framework"],
+            pos_input=batch["pos_input"], syn_input=batch["syn_input"], encoder_mask=encoder_mask
         )
 
         decoder_output = self.decoder(decoder_input, encoder_output, decoder_mask, encoder_mask)

@@ -70,9 +70,13 @@ class DecoderLayer(nn.Module):
 
 
 class Decoder(nn.Module):
-    def __init__(self, args):
+    def __init__(self, args, n_layers=None):
         super(Decoder, self).__init__()
-        self.layers = nn.ModuleList([DecoderLayer(args) for _ in range(args.n_layers)])
+        if n_layers is None:
+            self.layers = nn.ModuleList([DecoderLayer(args) for _ in range(args.n_layers)])
+        else:
+            self.layers = nn.ModuleList([DecoderLayer(args) for _ in range(n_layers)])
+
 
     def forward(self, target, encoder, target_mask, encoder_mask):
         target = target.transpose(0, 1)  # shape: (T, B, D)

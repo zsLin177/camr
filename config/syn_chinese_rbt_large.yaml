@@ -5,4 +5,4 @@ encoder: /data4/slzhou/PLMs/chinese-roberta-wwm-ext-large
 accumulation_steps: 1
 batch_size: 8
 query_length: 3
-use_syn: false
+use_syn: true

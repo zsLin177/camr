@@ -48,13 +48,14 @@ class Params:
         self.normalize = True                        # normalize inverted edge directions and labels
         self.query_length = 4                        # number of queries genereted for each word on the input
         self.pre_norm = True                         # use pre-normalized version of the transformer (as in Transformers without Tears)
+        self.use_syn = False
         self.warmup_steps = 6000                     # number of the warm-up steps for the inverse_sqrt scheduler
 
     def init_data_paths(self, base_dir: str):
         # path to the training dataset
         self.training_data = {
             ("amr", "eng"): f"{base_dir}/2020/cf/training/amr.mrp",
-            ("amr", "zho"): f"{base_dir}/camr_train_fdomain.mrp",
+            ("amr", "zho"): f"{base_dir}/syn_camr_train_fdomain.mrp",
             ("drg", "eng"): f"{base_dir}/2020/cf/training/drg.mrp",
             ("drg", "deu"): f"{base_dir}/2020/cl/training/drg.deu_train.mrp",
             ("eds", "eng"): f"{base_dir}/2020/cf/training/eds.mrp",
@@ -67,7 +68,7 @@ class Params:
         # path to the validation dataset
         self.validation_data = {
             ("amr", "eng"): f"{base_dir}/2020/cf/validation/amr.mrp",
-            ("amr", "zho"): f"{base_dir}/camr_dev_fdomain.mrp",
+            ("amr", "zho"): f"{base_dir}/syn_camr_dev_fdomain.mrp",
             ("drg", "eng"): f"{base_dir}/2020/cf/validation/drg.mrp",
             ("drg", "deu"): f"{base_dir}/2020/cl/training/drg.deu_val.mrp",
             ("eds", "eng"): f"{base_dir}/2020/cf/validation/eds.mrp",

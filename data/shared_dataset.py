@@ -94,13 +94,16 @@ class SharedDataset:
     def share_chars(self):
         sos, eos, unk, pad = "<sos>", "<eos>", "<unk>", "<pad>"
 
-        form_counter, lemma_counter = Counter(), Counter()
+        form_counter, lemma_counter, pos_counter, syn_counter = Counter(), Counter(), Counter(), Counter()
         for dataset in self.child_datasets.values():
             form_counter += dataset.char_form_field.vocab.freqs
             lemma_counter += dataset.char_lemma_field.vocab.freqs
+            # pos_counter += dataset.pos_field.vocab.freqs
+            # syn_counter += dataset.syn_field.vocab.freqs
 
         form_vocab = Vocab(form_counter, min_freq=1, specials=[pad, unk, sos, eos])
         lemma_vocab = Vocab(lemma_counter, min_freq=1, specials=[pad, unk, sos, eos])
+
 
         for dataset in self.child_datasets.values():
             dataset.char_form_field.vocab = dataset.char_form_field.nesting_field.vocab = form_vocab
@@ -108,6 +111,8 @@ class SharedDataset:
 
         self.char_form_vocab_size = len(form_vocab)
         self.char_lemma_vocab_size = len(lemma_vocab)
+        self.pos_vocab_size = len(dataset.pos_field.vocab)
+        self.syn_vocab_size = len(dataset.syn_field.vocab)
 
     def share_vocabs(self, args):
         ucca_datasets = [dataset for (f, l), dataset in self.child_datasets.items() if f == "ucca"]

@@ -54,6 +54,8 @@ class Dataset:
         self.scatter_field = BasicField()
         self.every_word_input_field = Field(lower=True, init_token=self.sos, eos_token=self.eos, batch_first=True, include_lengths=True)
         self.every_lemma_field = Field(lower=True, init_token=self.sos, eos_token=self.eos, batch_first=True)
+        self.pos_field = Field(lower=False, init_token=self.sos, eos_token=self.eos, batch_first=True)
+        self.syn_field = Field(lower=False, init_token=self.sos, eos_token=self.eos, batch_first=True)
 
         char_form_nesting = torchtext.data.Field(tokenize=char_tokenize, init_token=self.sos, eos_token=self.eos, batch_first=True)
         self.char_form_field = NestedField(char_form_nesting, include_lengths=True)
@@ -122,6 +124,8 @@ class Dataset:
             fields={
                 "input": [("every_input", self.every_word_input_field), ("char_form_input", self.char_form_field)],
                 "lemmas": ("char_lemma_input", self.char_lemma_field),
+                "pos": ("pos_input", self.pos_field),
+                "syn": ("syn_input", self.syn_field),
                 "bert input": ("input", self.bert_input_field),
                 "to scatter": ("input_scatter", self.scatter_field),
                 "edge permutations": ("edge_permutations", self.edge_permutation_field),
@@ -145,6 +149,8 @@ class Dataset:
                 "input": [("every_input", self.every_word_input_field), ("char_form_input", self.char_form_field)],
                 "bert input": ("input", self.bert_input_field),
                 "lemmas": [("every_lemma", self.every_lemma_field), ("char_lemma_input", self.char_lemma_field)],
+                "pos": ("pos_input", self.pos_field),
+                "syn": ("syn_input", self.syn_field),
                 "to scatter": ("input_scatter", self.scatter_field),
                 "edge permutations": ("edge_permutations", self.edge_permutation_field),
                 "nodes": [
@@ -198,6 +204,8 @@ class Dataset:
         self.every_word_input_field.build_vocab(self.val, self.test, min_freq=1, specials=[self.pad, self.unk, self.sos, self.eos])
         self.char_form_field.build_vocab(self.train, min_freq=1, specials=[self.pad, self.unk, self.sos, self.eos])
         self.char_lemma_field.build_vocab(self.train, min_freq=1, specials=[self.pad, self.unk, self.sos, self.eos])
+        self.pos_field.build_vocab(self.train, min_freq=1, specials=[self.pad, self.unk, self.sos, self.eos])
+        self.syn_field.build_vocab(self.train, min_freq=1, specials=[self.pad, self.unk, self.sos, self.eos])
         self.every_lemma_field.build_vocab(self.val, self.test, min_freq=1, specials=[self.pad, self.unk, self.sos, self.eos])
         self.label_field.build_vocab(self.train, min_freq=1, specials=[])
         self.property_field.build_vocab(self.train)
@@ -218,6 +226,9 @@ class Dataset:
         print(f"{len(self.relative_label_field.vocab)} words in the relative label vocabulary")
         print(f"{len(self.edge_label_field.vocab)} words in the edge label vocabulary")
         print(f"{len(self.char_form_field.vocab)} characters in the vocabulary")
+        print(f"{len(self.pos_field.vocab)} pos labels in the vocabulary")
+        print(f"{len(self.syn_field.vocab)} syn labels in the vocabulary")
+        
 
         Random(42).shuffle(self.train.examples)
         self.train.examples = self.train.examples[:len(self.train.examples) // n_gpus * n_gpus]

@@ -70,6 +70,8 @@ def main_worker(gpu, n_gpus_per_node, args):
     dataset.load_datasets(args, gpu, n_gpus_per_node)
 
     model = Model(dataset, args)
+    # different learning rate for defferent encoder layer and different learning rate for decoder
+    # must ensure the last group belongs to decoder 
     parameters = [{"params": p, "weight_decay": args.encoder_weight_decay} for p in model.get_encoder_parameters(args.n_encoder_layers)] + [
         {"params": model.get_decoder_parameters(), "weight_decay": args.decoder_weight_decay}
     ]

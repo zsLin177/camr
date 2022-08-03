@@ -17,6 +17,11 @@ import torch.nn.functional as F
 from model.transformers.modeling_bert import BertModel
 from model.transformers.modeling_roberta import RobertaModel
 from model.module.char_embedding import CharEmbedding
+from model.transformers.base import Decoder
+from supar.modules.lstm import VariationalLSTM
+from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
+from utility.utils import create_padding_mask
+
 
 
 class WordDropout(nn.Dropout):
@@ -74,11 +79,18 @@ class Encoder(nn.Module):
             self.lemma_char_embedding = CharEmbedding(dataset.char_lemma_vocab_size, args.char_embedding_size, self.dim)
             self.word_dropout = WordDropout(args.dropout_word)
 
+        self.use_syn = args.use_syn
+        if self.use_syn:
+            self.pos_embedding = nn.Embedding(num_embeddings=dataset.pos_vocab_size, embedding_dim=args.char_embedding_size)
+            self.syn_embedding = nn.Embedding(num_embeddings=dataset.syn_vocab_size, embedding_dim=args.char_embedding_size)
+            self.syn_lstm = VariationalLSTM(input_size=args.char_embedding_size*2, hidden_size=self.dim//2, num_layers=2, bidirectional=True, dropout=0.2)
+            self.fuse_layer = Decoder(args, 1)
+
         self.query_generator = QueryGenerator(self.dim, self.width_factor, len(args.frameworks))
         self.encoded_layer_norm = nn.LayerNorm(self.dim)
         self.scores = nn.Parameter(torch.zeros(self.n_layers, 1, 1, 1), requires_grad=True)
 
-    def forward(self, bert_input, form_chars, lemma_chars, to_scatter, n_words, frameworks):
+    def forward(self, bert_input, form_chars, lemma_chars, to_scatter, n_words, frameworks, pos_input=None, syn_input=None, encoder_mask=None):
         tokens, mask = bert_input
         batch_size = tokens.size(0)
 
@@ -109,5 +121,20 @@ class Encoder(nn.Module):
             form_char_embedding = self.form_char_embedding(form_chars[0], form_chars[1], form_chars[2])
             lemma_char_embedding = self.lemma_char_embedding(lemma_chars[0], lemma_chars[1], lemma_chars[2])
             encoder_output = self.word_dropout(encoder_output) + form_char_embedding + lemma_char_embedding
+        
+        if self.use_syn:
+            # [batch_size, seq_len, f_dim]
+            pos_embed = self.pos_embedding(pos_input)
+            syn_embed = self.syn_embedding(syn_input)
+            # [batch_size, seq_len, f_dim*2]
+            s_input = torch.cat((pos_embed, syn_embed), -1)
+            lens = pos_input.ne(0).sum(1).tolist()
+            x = pack_padded_sequence(s_input, lens, True, False)
+            x, _ = self.syn_lstm(x)
+            # [batch_size, seq_len, dim]
+            x, _ = pad_packed_sequence(x, True, total_length=pos_input.shape[1])
+            batch_size, total_syn_len, lens = pos_input.shape[0], pos_input.shape[1], pos_input.ne(0).sum(1)
+            syn_mask = create_padding_mask(batch_size, total_syn_len, lens, device=x.device)
+            encoder_output = self.fuse_layer(encoder_output, x, encoder_mask, syn_mask)
 
         return encoder_output, decoder_input
