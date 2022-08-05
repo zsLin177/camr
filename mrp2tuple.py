@@ -119,7 +119,6 @@ def normalize_concept_align(instances, attributes, sent):
             else:
                 # raise ValueError(f'normal concept id: {id} label: {label} has {attr_name}: {value}')
                 print(f'normal concept id: {id} label: {label} has {attr_name}: {value}')
-                continue
         
         # if flag == 1 and id != top_id:
         #     print(f'normal concept id: {id} label: {label} has {attr_name}: {value} ignore!')
@@ -161,9 +160,13 @@ def normalize_concept_align(instances, attributes, sent):
             op_lst = sorted(op_lst, key=lambda x:x[0])
             new_label = ''.join([op_value for op_name, op_value in op_lst])
         else:
-            print(f'name concept id: {id} label: {label} has no op attr, ignore!')
-            ignore_ids.append(id)
-            continue
+            if id != top_id:
+                print(f'name concept id: {id} label: {label} has no op attr, ignore!')
+                ignore_ids.append(id)
+                continue
+            else:
+                new_label = 'name'
+
             
         if anchor_set is None or len(anchor_set) == 0:
             # this concept has no alignment

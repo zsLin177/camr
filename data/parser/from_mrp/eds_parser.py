@@ -85,7 +85,6 @@ class EDSParser(AbstractParser):
     def initialize(self, args, raw_path, cache_path, companion_path, precomputed_dataset=None):
         print("Caching the dataset...\n", flush=True)
         data = utils.load_dataset(raw_path, framework=self.framework)
-
         utils.add_companion(data, companion_path, self.language)
         utils.normalize_properties(data)
         utils.tokenize(data, mode="aggressive")

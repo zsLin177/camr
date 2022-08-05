@@ -143,8 +143,9 @@ def add_fake_companion(data, language):
 
     for sample in list(data.values()):
         sample["sentence"] = sample["input"]
-
-        token_objects = tokenizer.create_tokens(sample)
+        token_objects = tokenizer.get_tokens_by_split(sample)
+        # TODO:change
+        # token_objects = tokenizer.create_tokens(sample)
         token_objects = [t for t in token_objects if t["token"] is not None]
 
         tokens = [t["token"]["word"] if isinstance(t["token"], dict) else t["token"] for t in token_objects]

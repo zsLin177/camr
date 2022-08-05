@@ -20,6 +20,24 @@ class Tokenizer:
         self.wrong_count = 0
         self.tokenizer = pyonmttok.Tokenizer(mode)
 
+    def get_tokens_by_split(self, sentence):
+        """
+        different from the create_tokens, it just get tokens by split space for chinese
+        returns:
+            [{'token': None, 'span': {'from': -inf, 'to': 0}}, {'token': {'word': '最近', 'lemma': None}, 'span': {'from': 0, 'to': 2}}, {'token': {'word': '，', 'lemma': None}, 'span': {'from': 3, 'to': 4}}, {'token': {'word': '我们', 'lemma': None}, 'span': {'from': 5, 'to': 7}}, {'token': {'word': '通过', 'lemma': None}, 'span': {'from': 8, 'to': 10}}, {'token': {'word': '知情', 'lemma': None}, 'span': {'from': 11, 'to': 13}}, {'token': {'word': '人士', 'lemma': None}, 'span': {'from': 14, 'to': 16}}, {'token': {'word': '从', 'lemma': None}, 'span': {'from': 17, 'to': 18}}, {'token': {'word': '衡阳市', 'lemma': None}, 'span': {'from': 19, 'to': 22}}, {'token': {'word': '殡葬', 'lemma': None}, 'span': {'from': 23, 'to': 25}}, {'token': {'word': '管理处', 'lemma': None}, 'span': {'from': 26, 'to': 29}}, {'token': {'word': '财务', 'lemma': None}, 'span': {'from': 30, 'to': 32}}, {'token': {'word': '部门', 'lemma': None}, 'span': {'from': 33, 'to': 35}}, {'token': {'word': '复印', 'lemma': None}, 'span': {'from': 36, 'to': 38}}, {'token': {'word': '出', 'lemma': None}, 'span': {'from': 39, 'to': 40}}, {'token': {'word': '部分', 'lemma': None}, 'span': {'from': 41, 'to': 43}}, {'token': {'word': '原始', 'lemma': None}, 'span': {'from': 44, 'to': 46}}, {'token': {'word': '发票', 'lemma': None}, 'span': {'from': 47, 'to': 49}}, {'token': {'word': '凭证', 'lemma': None}, 'span': {'from': 50, 'to': 52}}, {'token': {'word': '11', 'lemma': None}, 'span': {'from': 53, 'to': 55}}, {'token': {'word': '份', 'lemma': None}, 'span': {'from': 56, 'to': 57}}, {'token': {'word': '（', 'lemma': None}, 'span': {'from': 58, 'to': 59}}, {'token': {'word': '共计', 'lemma': None}, 'span': {'from': 60, 'to': 62}}, {'token': {'word': '有', 'lemma': None}, 'span': {'from': 63, 'to': 64}}, {'token': {'word': '30', 'lemma': None}, 'span': {'from': 65, 'to': 67}}, {'token': {'word': '余', 'lemma': None}, 'span': {'from': 67, 'to': 68}}, {'token': {'word': '份', 'lemma': None}, 'span': {'from': 69, 'to': 70}}, {'token': {'word': '）', 'lemma': None}, 'span': {'from': 71, 'to': 72}}, {'token': {'word': '。', 'lemma': None}, 'span': {'from': 73, 'to': 74}}, {'token': None, 'span': {'from': 74, 'to': inf}}]
+        """
+        tokens = sentence["sentence"].split()
+        res = []
+        res.append({'token': None, 'span': {'from': -float('inf'), 'to': 0}})
+        st = 0
+        for token in tokens:
+            token_len = len(token)
+            token_dic = {'token': {'word': token, 'lemma': None}, 'span': {'from': st, 'to': st+token_len}}
+            st = st+token_len+1
+            res.append(token_dic)
+        res.append({'token': None, 'span': {'from': st-1, 'to': float('inf')}})
+        return res
+        
     def create_tokens(self, sentence):
         new_tokens = [{"token": None, "span": {"from": float("-inf"), "to": 0}}]
 
@@ -85,7 +103,11 @@ class Tokenizer:
         return new_tokens
 
     def __call__(self, sentence):
-        new_tokens = self.create_tokens(sentence)
+        # import pdb
+        # pdb.set_trace()
+        # TODO:change
+        # new_tokens = self.create_tokens(sentence)
+        new_tokens = self.get_tokens_by_split(sentence)
 
         offset, increase = 0, 0
         new_input, new_lemmas, new_spans = [], [], []

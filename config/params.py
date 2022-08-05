@@ -55,7 +55,7 @@ class Params:
         # path to the training dataset
         self.training_data = {
             ("amr", "eng"): f"{base_dir}/2020/cf/training/amr.mrp",
-            ("amr", "zho"): f"{base_dir}/syn_camr_train_fdomain.mrp",
+            ("amr", "zho"): f"{base_dir}/mytokenize_camr_train_fdomain.mrp",
             ("drg", "eng"): f"{base_dir}/2020/cf/training/drg.mrp",
             ("drg", "deu"): f"{base_dir}/2020/cl/training/drg.deu_train.mrp",
             ("eds", "eng"): f"{base_dir}/2020/cf/training/eds.mrp",
@@ -68,7 +68,7 @@ class Params:
         # path to the validation dataset
         self.validation_data = {
             ("amr", "eng"): f"{base_dir}/2020/cf/validation/amr.mrp",
-            ("amr", "zho"): f"{base_dir}/syn_camr_dev_fdomain.mrp",
+            ("amr", "zho"): f"{base_dir}/mytokenize_camr_dev_fdomain.mrp",
             ("drg", "eng"): f"{base_dir}/2020/cf/validation/drg.mrp",
             ("drg", "deu"): f"{base_dir}/2020/cl/training/drg.deu_val.mrp",
             ("eds", "eng"): f"{base_dir}/2020/cf/validation/eds.mrp",

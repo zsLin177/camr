@@ -17,8 +17,7 @@ import torch.nn.functional as F
 from model.transformers.modeling_bert import BertModel
 from model.transformers.modeling_roberta import RobertaModel
 from model.module.char_embedding import CharEmbedding
-from model.transformers.base import Decoder
-from supar.modules.lstm import VariationalLSTM
+from supar.modules.mlp import MLP
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 from utility.utils import create_padding_mask
 
@@ -57,6 +56,7 @@ class QueryGenerator(nn.Module):
 
 
 class Encoder(nn.Module):
+    # TODO: bart
     def __init__(self, args, dataset):
         super(Encoder, self).__init__()
 
@@ -83,8 +83,7 @@ class Encoder(nn.Module):
         if self.use_syn:
             self.pos_embedding = nn.Embedding(num_embeddings=dataset.pos_vocab_size, embedding_dim=args.char_embedding_size)
             self.syn_embedding = nn.Embedding(num_embeddings=dataset.syn_vocab_size, embedding_dim=args.char_embedding_size)
-            self.syn_lstm = VariationalLSTM(input_size=args.char_embedding_size*2, hidden_size=self.dim//2, num_layers=2, bidirectional=True, dropout=0.2)
-            self.fuse_layer = Decoder(args, 1)
+            self.fusion_mlp = MLP(self.dim+args.char_embedding_size*2, self.dim, activation=False)
 
         self.query_generator = QueryGenerator(self.dim, self.width_factor, len(args.frameworks))
         self.encoded_layer_norm = nn.LayerNorm(self.dim)
@@ -115,6 +114,8 @@ class Encoder(nn.Module):
         encoder_output.scatter_add_(dim=1, index=to_scatter, src=encoded[:, 1:-1, :])  # shape: (B, n_words + 1, H)
         encoder_output = encoder_output[:, :-1, :]
 
+        # add syntax here?
+
         decoder_input = self.query_generator(encoder_output, frameworks)
 
         if self.use_char_embedding:
@@ -126,15 +127,6 @@ class Encoder(nn.Module):
             # [batch_size, seq_len, f_dim]
             pos_embed = self.pos_embedding(pos_input)
             syn_embed = self.syn_embedding(syn_input)
-            # [batch_size, seq_len, f_dim*2]
-            s_input = torch.cat((pos_embed, syn_embed), -1)
-            lens = pos_input.ne(0).sum(1).tolist()
-            x = pack_padded_sequence(s_input, lens, True, False)
-            x, _ = self.syn_lstm(x)
-            # [batch_size, seq_len, dim]
-            x, _ = pad_packed_sequence(x, True, total_length=pos_input.shape[1])
-            batch_size, total_syn_len, lens = pos_input.shape[0], pos_input.shape[1], pos_input.ne(0).sum(1)
-            syn_mask = create_padding_mask(batch_size, total_syn_len, lens, device=x.device)
-            encoder_output = self.fuse_layer(encoder_output, x, encoder_mask, syn_mask)
+            encoder_output = self.fusion_mlp(torch.cat((encoder_output, pos_embed, syn_embed), -1))
 
         return encoder_output, decoder_input
