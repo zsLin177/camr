@@ -6,6 +6,7 @@ class Params:
     def __init__(self):
         self.accumulation_steps = 2                  # number of gradient accumulation steps for achieving a bigger batch_size
         self.activation = "relu"                     # transformer (decoder) activation function, supported values: {'relu', 'gelu', 'sigmoid', 'mish'}
+        self.add_fw = False                          # whether to predict functional words
         self.balance_loss_weights = True             # use weight loss balancing (GradNorm)
         self.batch_size = 16                         # batch size (further divided into multiple GPUs)
         self.beta_2 = 0.98                           # beta 2 parameter for Adam(W) optimizer
@@ -48,7 +49,7 @@ class Params:
         self.normalize = True                        # normalize inverted edge directions and labels
         self.query_length = 4                        # number of queries genereted for each word on the input
         self.pre_norm = True                         # use pre-normalized version of the transformer (as in Transformers without Tears)
-        self.use_syn = False
+        self.use_syn = False                         # whether to use syntax and pos
         self.warmup_steps = 6000                     # number of the warm-up steps for the inverse_sqrt scheduler
 
     def init_data_paths(self, base_dir: str):
@@ -77,6 +78,10 @@ class Params:
             ("ucca", "eng"): f"{base_dir}/2020/cf/validation/ucca.mrp",
             ("ucca", "deu"): f"{base_dir}/2020/cl/training/ucca.deu_val.mrp",
         }
+
+        if self.add_fw:
+            self.training_data[("amr", "zho")] = f"{base_dir}/addfw_mytokenize_camr_train_fdomain.mrp"
+            self.validation_data[("amr", "zho")] = f"{base_dir}/addfw_mytokenize_camr_dev_fdomain.mrp"
 
         # path to the test dataset
         self.test_data = {

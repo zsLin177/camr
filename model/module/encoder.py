@@ -114,7 +114,12 @@ class Encoder(nn.Module):
         encoder_output.scatter_add_(dim=1, index=to_scatter, src=encoded[:, 1:-1, :])  # shape: (B, n_words + 1, H)
         encoder_output = encoder_output[:, :-1, :]
 
-        # add syntax here?
+        # add syntax before
+        if self.use_syn:
+            # [batch_size, seq_len, f_dim]
+            pos_embed = self.pos_embedding(pos_input)
+            syn_embed = self.syn_embedding(syn_input)
+            encoder_output = self.fusion_mlp(torch.cat((encoder_output, pos_embed, syn_embed), -1))
 
         decoder_input = self.query_generator(encoder_output, frameworks)
 
@@ -123,10 +128,11 @@ class Encoder(nn.Module):
             lemma_char_embedding = self.lemma_char_embedding(lemma_chars[0], lemma_chars[1], lemma_chars[2])
             encoder_output = self.word_dropout(encoder_output) + form_char_embedding + lemma_char_embedding
         
-        if self.use_syn:
-            # [batch_size, seq_len, f_dim]
-            pos_embed = self.pos_embedding(pos_input)
-            syn_embed = self.syn_embedding(syn_input)
-            encoder_output = self.fusion_mlp(torch.cat((encoder_output, pos_embed, syn_embed), -1))
+        # add syntax after
+        # if self.use_syn:
+        #     # [batch_size, seq_len, f_dim]
+        #     pos_embed = self.pos_embedding(pos_input)
+        #     syn_embed = self.syn_embedding(syn_input)
+        #     encoder_output = self.fusion_mlp(torch.cat((encoder_output, pos_embed, syn_embed), -1))
 
         return encoder_output, decoder_input

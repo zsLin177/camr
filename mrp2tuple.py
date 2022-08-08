@@ -31,7 +31,7 @@ def read_tuples(graphs, prefix, values={"tops", "labels", "properties", "anchors
         sent_ids.append(g.id.split('.')[1])
         ginstances, gattributes, grelations, gn = tuples(g, prefix, values, faith)
         node_dic, top_id = normalize_concept_align(ginstances, gattributes, g.input)
-        rels = get_rels(node_dic, top_id, grelations)
+        rels = get_rels(node_dic, top_id, grelations, g.input.strip().split())
         all_res.append(rels)
 
     return all_res, sent_ids
@@ -46,23 +46,72 @@ def write_tuple_file(file_name, all_res, sent_ids):
 
         for sent_res, sent_id in zip(all_res, sent_ids):
             for rel_dic in sent_res:
-                line_lst = [sent_id, rel_dic['head'][1], rel_dic['head'][0], '-', rel_dic['rel'], '-', '-', rel_dic['tail'][1], rel_dic['tail'][0], '-']
+                line_lst = [sent_id, rel_dic['head'][1], rel_dic['head'][0], '-', rel_dic['rel'], rel_dic['fw_align'], rel_dic['fw'], rel_dic['tail'][1], rel_dic['tail'][0], '-']
                 f.write('\t'.join(line_lst)+'\n')
             f.write('\n')
         
-def get_rels(node_dic, top_id, relations):
+def get_rels(node_dic, top_id, relations, tokens):
     res = []
-    res.append({'head': ('root', 'x0'), 'tail': node_dic[top_id], 'rel': ':top'})
+    res.append({'head': ('root', 'x0'), 'tail': node_dic[top_id], 'rel': ':top', 'fw':'-', 'fw_align': '-'})
     for rel, head_id, tail_id in relations:
         if head_id not in node_dic or tail_id not in node_dic:
             continue
-        if rel == 'fdomain':
+        
+        if len(rel.split('+')) == 2:
+            rel, fw = rel.split('+')
+            if rel == 'fdomain':
+                rel = ':mod'
+                h, t = node_dic[tail_id], node_dic[head_id]
+            else:
+                rel = ':'+rel
+                h, t = node_dic[head_id], node_dic[tail_id]
+            h_align_str, t_align_str = h[1], t[1]
+            fw_align_str = 'x' + str(match_fw(fw, tokens, h_align_str, t_align_str))
+            res.append({'head': h, 'tail': t, 'rel': rel, 'fw':fw, 'fw_align': fw_align_str})
+        elif rel == 'fdomain':
             rel = ':mod'
-            res.append({'head': node_dic[tail_id], 'tail': node_dic[head_id], 'rel': rel})
+            res.append({'head': node_dic[tail_id], 'tail': node_dic[head_id], 'rel': rel, 'fw':'-', 'fw_align': '-'})
         else:
             rel = ':'+rel
-            res.append({'head': node_dic[head_id], 'tail': node_dic[tail_id], 'rel': rel})
+            res.append({'head': node_dic[head_id], 'tail': node_dic[tail_id], 'rel': rel, 'fw':'-', 'fw_align': '-'})
     return res
+
+def match_fw(fw, tokens, head_align_str, tail_align_str):
+    """
+    Find the alignment of the fw in tokens.
+    Currently, search fw is seen as a whole
+    """
+    # start from 0
+    h_a_idx = int(head_align_str.split('_')[0].split('x')[1]) - 1
+    t_a_idx = int(tail_align_str.split('_')[0].split('x')[1]) - 1
+    if h_a_idx < len(tokens):
+        core_idx = h_a_idx
+    elif t_a_idx < len(tokens):
+        core_idx = t_a_idx
+    else:
+        core_idx = len(tokens) // 2
+    
+    matched_idx = find(fw, tokens, core_idx)
+    if matched_idx != -1:
+        # start from 1
+        return matched_idx+1
+    else:
+        if core_idx == len(tokens)-1:
+            return core_idx + 1 - 1
+        else:
+            return core_idx + 1 + 1
+    
+def find(fw, tokens, core_idx):
+    if tokens[core_idx] == fw:
+        return core_idx
+    # find behind first
+    if fw in tokens[core_idx+1:]:
+        return tokens.index(fw, core_idx+1)
+    if fw in tokens[0: core_idx]:
+        reversed_lst = list(reversed(tokens[0: core_idx]))
+        return len(reversed_lst) - 1 - reversed_lst.index(fw)
+    # not finded
+    return -1
 
 
 def normalize_concept_align(instances, attributes, sent):
@@ -131,7 +180,7 @@ def normalize_concept_align(instances, attributes, sent):
             node_dic[id] = (label, 'x' + str(align_token_id))
         else:
             sorted_lst = sorted(anchor_set)
-            v = combine(sorted_lst, char_level_seg, sent, tokens)
+            v = combine(sorted_lst, char_level_seg, sent, tokens, label)
             node_dic[id] = (label, v)
 
     # process name concept
@@ -167,7 +216,6 @@ def normalize_concept_align(instances, attributes, sent):
             else:
                 new_label = 'name'
 
-            
         if anchor_set is None or len(anchor_set) == 0:
             # this concept has no alignment
             align_token_id = outer_align
@@ -175,11 +223,11 @@ def normalize_concept_align(instances, attributes, sent):
             node_dic[id] = (new_label, 'x' + str(align_token_id))
         else:
             sorted_lst = sorted(anchor_set)
-            v = combine(sorted_lst, char_level_seg, sent, tokens)
+            v, new_label = combine(sorted_lst, char_level_seg, sent, tokens, new_label, if_name_node=True)
             node_dic[id] = (new_label, v)
     return node_dic, top_id
 
-def combine(char_anchor_lst, word_spans, sent, tokens):
+def combine(char_anchor_lst, word_spans, sent, tokens, label, if_name_node=False):
     res  = []
     word_ids = []
     for ca in char_anchor_lst:
@@ -209,15 +257,41 @@ def combine(char_anchor_lst, word_spans, sent, tokens):
     word_level_wordid.append(word_ids[-1])
 
     s_lst = []
-    for i, lst in enumerate(word_level_res):
-        word_id = word_level_wordid[i]
-        word = tokens[word_id-1]
-        if len(lst) == len(word):
-            s_lst.append('x'+str(word_id))
-        else:
-            sub_s = '_'.join([str(char_id-word_spans[word_id-1][0]+1) for char_id in lst])
-            s_lst.append('x'+str(word_id)+'_'+sub_s)
-    return '_'.join(s_lst)
+    if not if_name_node:
+        for i, lst in enumerate(word_level_res):
+            word_id = word_level_wordid[i]
+            word = tokens[word_id-1]
+            if label in word:
+                if label == word:
+                    s_lst.append('x'+str(word_id))
+                else:
+                    char_st = word.index(label) + 1
+                    tmp_chr_lst = [str(char_st+ci) for ci in range(len(label))]
+                    s_lst.append('x'+str(word_id)+'_'+'_'.join(tmp_chr_lst))
+            else:
+                if len(lst) == len(word):
+                    s_lst.append('x'+str(word_id))
+                else:
+                    sub_s = '_'.join([str(char_id-word_spans[word_id-1][0]+1) for char_id in lst])
+                    s_lst.append('x'+str(word_id)+'_'+sub_s)
+        return '_'.join(s_lst)
+    else:
+        # name concept
+        new_label_str = ''
+        for i, lst in enumerate(word_level_res):
+            word_id = word_level_wordid[i]
+            word = tokens[word_id-1]
+
+            for c_i in lst:
+                new_label_str += sent[c_i]
+            
+            if len(lst) == len(word):
+                s_lst.append('x'+str(word_id))
+            else:
+                sub_s = '_'.join([str(char_id-word_spans[word_id-1][0]+1) for char_id in lst])
+                s_lst.append('x'+str(word_id)+'_'+sub_s)
+
+        return '_'.join(s_lst), new_label_str
 
 
 def check_sent_id(raw_camr_file, sent_id_from_mrp):

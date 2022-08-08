@@ -1,1 +1,1 @@
-CUDA_VISIBLE_DEVICES=0 python inference.py --checkpoint outputs/08-05-22_13-18-17/best_checkpoint.h5  --data_directory ccl2022
+CUDA_VISIBLE_DEVICES=0 python inference.py --checkpoint outputs/08-07-22_03-49-59/best_checkpoint.h5  --data_directory ccl2022

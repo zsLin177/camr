@@ -6,4 +6,4 @@ accumulation_steps: 1
 batch_size: 8
 query_length: 3
 use_syn: false
-add_fw: false
+add_fw: true

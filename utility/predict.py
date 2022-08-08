@@ -18,7 +18,7 @@ from utility.evaluate import evaluate
 def sentence_condition(s, f, l):
     return ("framework" not in s or f == s["framework"]) and ("framework" in s or f in s["targets"])
 
-
+@torch.no_grad()
 def predict(model, data, input_paths, args, output_directory, gpu, run_evaluation=False, epoch=None):
     model.eval()
     input_files = {(f, l): input_paths[(f, l)] for f, l in args.frameworks}
