@@ -67,13 +67,17 @@ def main_worker(gpu, n_gpus_per_node, args):
         dist.init_process_group(backend=args.dist_backend, init_method="env://", world_size=n_gpus_per_node, rank=gpu)
 
     dataset = SharedDataset(args)
-    dataset.load_datasets(args, gpu, n_gpus_per_node)
+    # dataset.load_datasets(args, gpu, n_gpus_per_node)
 
-    model = Model(dataset, args)
     if args.pretrained is not None:
         checkpoint = torch.load(args.pretrained)
+        dataset.load_state_dict(args, checkpoint['dataset'])
+        dataset.load_datasets(args, gpu, n_gpus_per_node, build_vocab=False)
+        model = Model(dataset, args)
         model.load_state_dict(checkpoint['model'])
-    
+    else:
+        dataset.load_datasets(args, gpu, n_gpus_per_node)
+        model = Model(dataset, args)
 
     # different learning rate for defferent encoder layer and different learning rate for decoder
     # must ensure the last group belongs to decoder 

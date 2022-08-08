@@ -54,8 +54,9 @@ class Dataset:
         self.scatter_field = BasicField()
         self.every_word_input_field = Field(lower=True, init_token=self.sos, eos_token=self.eos, batch_first=True, include_lengths=True)
         self.every_lemma_field = Field(lower=True, init_token=self.sos, eos_token=self.eos, batch_first=True)
-        self.pos_field = Field(lower=False, init_token=self.sos, eos_token=self.eos, batch_first=True)
-        self.syn_field = Field(lower=False, init_token=self.sos, eos_token=self.eos, batch_first=True)
+        if args.use_syn:
+            self.pos_field = Field(lower=False, init_token=self.sos, eos_token=self.eos, batch_first=True)
+            self.syn_field = Field(lower=False, init_token=self.sos, eos_token=self.eos, batch_first=True)
 
         char_form_nesting = torchtext.data.Field(tokenize=char_tokenize, init_token=self.sos, eos_token=self.eos, batch_first=True)
         self.char_form_field = NestedField(char_form_nesting, include_lengths=True)
@@ -82,7 +83,10 @@ class Dataset:
         self.property_keys = d["property keys"]
         self.property_field.vocabs = pickle.loads(d["property vocabs"])
         for key, value in d["vocabs"].items():
-            getattr(self, key).vocab = pickle.loads(value)
+            if hasattr(self, key):
+                getattr(self, key).vocab = pickle.loads(value)
+            else:
+                print(f'This new dataset has no attr {key}, ignore!')
 
     def state_dict(self):
         return {
@@ -110,7 +114,7 @@ class Dataset:
 
         return dataset
 
-    def load_dataset(self, args, gpu, n_gpus, framework: str, language: str):
+    def load_dataset(self, args, gpu, n_gpus, framework: str, language: str, build_vocab=True):
         dataset = {
             ("amr", "eng"): AMRParser, ("amr", "zho"): EDSParser,
             ("drg", "eng"): DRGParser, ("drg", "deu"): DRGParser,
@@ -119,67 +123,124 @@ class Dataset:
             ("ucca", "eng"): UCCAParser, ("ucca", "deu"): UCCAParser,
         }[(framework, language)]
 
-        self.train = dataset(
-            args, framework, language, "training",
-            fields={
-                "input": [("every_input", self.every_word_input_field), ("char_form_input", self.char_form_field)],
-                "lemmas": ("char_lemma_input", self.char_lemma_field),
-                "pos": ("pos_input", self.pos_field),
-                "syn": ("syn_input", self.syn_field),
-                "bert input": ("input", self.bert_input_field),
-                "to scatter": ("input_scatter", self.scatter_field),
-                "edge permutations": ("edge_permutations", self.edge_permutation_field),
-                "nodes": [
-                    ("labels", self.label_field),
-                    ("relative_labels", self.relative_label_field),
-                    ("properties", self.property_field),
-                ],
-                "top": ("top", self.top_field),
-                "edge presence": ("edge_presence", self.edge_presence_field),
-                "edge labels": ("edge_labels", self.edge_label_field),
-                "edge attributes": ("edge_attributes", self.edge_attribute_field),
-                "anchor edges": ("anchor", self.anchor_field),
-            },
-            filter_pred=None,
-        )
+        if args.use_syn:
+            self.train = dataset(
+                args, framework, language, "training",
+                fields={
+                    "input": [("every_input", self.every_word_input_field), ("char_form_input", self.char_form_field)],
+                    "lemmas": ("char_lemma_input", self.char_lemma_field),
+                    "pos": ("pos_input", self.pos_field),
+                    "syn": ("syn_input", self.syn_field),
+                    "bert input": ("input", self.bert_input_field),
+                    "to scatter": ("input_scatter", self.scatter_field),
+                    "edge permutations": ("edge_permutations", self.edge_permutation_field),
+                    "nodes": [
+                        ("labels", self.label_field),
+                        ("relative_labels", self.relative_label_field),
+                        ("properties", self.property_field),
+                    ],
+                    "top": ("top", self.top_field),
+                    "edge presence": ("edge_presence", self.edge_presence_field),
+                    "edge labels": ("edge_labels", self.edge_label_field),
+                    "edge attributes": ("edge_attributes", self.edge_attribute_field),
+                    "anchor edges": ("anchor", self.anchor_field),
+                },
+                filter_pred=None,
+            )
 
-        self.val = dataset(
-            args, framework, language, "validation",
-            fields={
-                "input": [("every_input", self.every_word_input_field), ("char_form_input", self.char_form_field)],
-                "bert input": ("input", self.bert_input_field),
-                "lemmas": [("every_lemma", self.every_lemma_field), ("char_lemma_input", self.char_lemma_field)],
-                "pos": ("pos_input", self.pos_field),
-                "syn": ("syn_input", self.syn_field),
-                "to scatter": ("input_scatter", self.scatter_field),
-                "edge permutations": ("edge_permutations", self.edge_permutation_field),
-                "nodes": [
-                    ("labels", self.label_field),
-                    ("relative_labels", self.relative_label_field),
-                    ("properties", self.property_field),
-                ],
-                "top": ("top", self.top_field),
-                "edge presence": ("edge_presence", self.edge_presence_field),
-                "edge labels": ("edge_labels", self.edge_label_field),
-                "edge attributes": ("edge_attributes", self.edge_attribute_field),
-                "anchor edges": ("anchor", self.anchor_field),
-                "token anchors": ("token_intervals", self.token_interval_field),
-                "id": ("id", self.id_field),
-            },
-            precomputed_dataset=self.train.data,
-        )
+            self.val = dataset(
+                args, framework, language, "validation",
+                fields={
+                    "input": [("every_input", self.every_word_input_field), ("char_form_input", self.char_form_field)],
+                    "bert input": ("input", self.bert_input_field),
+                    "lemmas": [("every_lemma", self.every_lemma_field), ("char_lemma_input", self.char_lemma_field)],
+                    "pos": ("pos_input", self.pos_field),
+                    "syn": ("syn_input", self.syn_field),
+                    "to scatter": ("input_scatter", self.scatter_field),
+                    "edge permutations": ("edge_permutations", self.edge_permutation_field),
+                    "nodes": [
+                        ("labels", self.label_field),
+                        ("relative_labels", self.relative_label_field),
+                        ("properties", self.property_field),
+                    ],
+                    "top": ("top", self.top_field),
+                    "edge presence": ("edge_presence", self.edge_presence_field),
+                    "edge labels": ("edge_labels", self.edge_label_field),
+                    "edge attributes": ("edge_attributes", self.edge_attribute_field),
+                    "anchor edges": ("anchor", self.anchor_field),
+                    "token anchors": ("token_intervals", self.token_interval_field),
+                    "id": ("id", self.id_field),
+                },
+                precomputed_dataset=self.train.data,
+            )
 
-        self.test = EvaluationParser(
-            args, framework, language,
-            fields={
-                "input": [("every_input", self.every_word_input_field), ("char_form_input", self.char_form_field)],
-                "bert input": ("input", self.bert_input_field),
-                "lemmas": [("every_lemma", self.every_lemma_field), ("char_lemma_input", self.char_lemma_field)],
-                "to scatter": ("input_scatter", self.scatter_field),
-                "token anchors": ("token_intervals", self.token_interval_field),
-                "id": ("id", self.id_field),
-            },
-        )
+            self.test = EvaluationParser(
+                args, framework, language,
+                fields={
+                    "input": [("every_input", self.every_word_input_field), ("char_form_input", self.char_form_field)],
+                    "bert input": ("input", self.bert_input_field),
+                    "lemmas": [("every_lemma", self.every_lemma_field), ("char_lemma_input", self.char_lemma_field)],
+                    "to scatter": ("input_scatter", self.scatter_field),
+                    "token anchors": ("token_intervals", self.token_interval_field),
+                    "id": ("id", self.id_field),
+                },
+            )
+        else:
+            self.train = dataset(
+                args, framework, language, "training",
+                fields={
+                    "input": [("every_input", self.every_word_input_field), ("char_form_input", self.char_form_field)],
+                    "lemmas": ("char_lemma_input", self.char_lemma_field),
+                    "bert input": ("input", self.bert_input_field),
+                    "to scatter": ("input_scatter", self.scatter_field),
+                    "edge permutations": ("edge_permutations", self.edge_permutation_field),
+                    "nodes": [
+                        ("labels", self.label_field),
+                        ("relative_labels", self.relative_label_field),
+                        ("properties", self.property_field),
+                    ],
+                    "top": ("top", self.top_field),
+                    "edge presence": ("edge_presence", self.edge_presence_field),
+                    "edge labels": ("edge_labels", self.edge_label_field),
+                    "edge attributes": ("edge_attributes", self.edge_attribute_field),
+                    "anchor edges": ("anchor", self.anchor_field),
+                },
+                filter_pred=None,
+            )
+            self.val = dataset(
+                args, framework, language, "validation",
+                fields={
+                    "input": [("every_input", self.every_word_input_field), ("char_form_input", self.char_form_field)],
+                    "bert input": ("input", self.bert_input_field),
+                    "lemmas": [("every_lemma", self.every_lemma_field), ("char_lemma_input", self.char_lemma_field)],
+                    "to scatter": ("input_scatter", self.scatter_field),
+                    "edge permutations": ("edge_permutations", self.edge_permutation_field),
+                    "nodes": [
+                        ("labels", self.label_field),
+                        ("relative_labels", self.relative_label_field),
+                        ("properties", self.property_field),
+                    ],
+                    "top": ("top", self.top_field),
+                    "edge presence": ("edge_presence", self.edge_presence_field),
+                    "edge labels": ("edge_labels", self.edge_label_field),
+                    "edge attributes": ("edge_attributes", self.edge_attribute_field),
+                    "anchor edges": ("anchor", self.anchor_field),
+                    "token anchors": ("token_intervals", self.token_interval_field),
+                    "id": ("id", self.id_field),
+                },
+                precomputed_dataset=self.train.data,
+            )
+            self.test = EvaluationParser(
+                args, framework, language,
+                fields={
+                    "input": [("every_input", self.every_word_input_field), ("char_form_input", self.char_form_field)],
+                    "bert input": ("input", self.bert_input_field),
+                    "lemmas": [("every_lemma", self.every_lemma_field), ("char_lemma_input", self.char_lemma_field)],
+                    "to scatter": ("input_scatter", self.scatter_field),
+                    "token anchors": ("token_intervals", self.token_interval_field),
+                    "id": ("id", self.id_field),
+                },
+            )
 
         del self.train.data, self.val.data, self.test.data
         for f in list(self.train.fields.values()) + list(self.val.fields.values()) + list(self.test.fields.values()):
@@ -201,33 +262,39 @@ class Dataset:
         self.anchor_freq = self.train.anchor_freq
         print(f"{self.node_count} nodes in the train split")
 
-        self.every_word_input_field.build_vocab(self.val, self.test, min_freq=1, specials=[self.pad, self.unk, self.sos, self.eos])
-        self.char_form_field.build_vocab(self.train, min_freq=1, specials=[self.pad, self.unk, self.sos, self.eos])
-        self.char_lemma_field.build_vocab(self.train, min_freq=1, specials=[self.pad, self.unk, self.sos, self.eos])
-        self.pos_field.build_vocab(self.train, min_freq=1, specials=[self.pad, self.unk, self.sos, self.eos])
-        self.syn_field.build_vocab(self.train, min_freq=1, specials=[self.pad, self.unk, self.sos, self.eos])
-        self.every_lemma_field.build_vocab(self.val, self.test, min_freq=1, specials=[self.pad, self.unk, self.sos, self.eos])
-        self.label_field.build_vocab(self.train, min_freq=1, specials=[])
-        self.property_field.build_vocab(self.train)
-        self.relative_label_field.build_vocab(self.train)
-        self.id_field.build_vocab(self.val, self.test, min_freq=1, specials=[])
-        self.edge_label_field.build_vocab(self.train)
-        self.edge_attribute_field.build_vocab(self.train)
+        if build_vocab:
+            self.every_word_input_field.build_vocab(self.val, self.test, min_freq=1, specials=[self.pad, self.unk, self.sos, self.eos])
+            self.char_form_field.build_vocab(self.train, min_freq=1, specials=[self.pad, self.unk, self.sos, self.eos])
+            self.char_lemma_field.build_vocab(self.train, min_freq=1, specials=[self.pad, self.unk, self.sos, self.eos])
+            if args.use_syn:
+                self.pos_field.build_vocab(self.train, min_freq=1, specials=[self.pad, self.unk, self.sos, self.eos])
+                self.syn_field.build_vocab(self.train, min_freq=1, specials=[self.pad, self.unk, self.sos, self.eos])
+            self.every_lemma_field.build_vocab(self.val, self.test, min_freq=1, specials=[self.pad, self.unk, self.sos, self.eos])
+            self.label_field.build_vocab(self.train, min_freq=1, specials=[])
+            self.property_field.build_vocab(self.train)
+            self.relative_label_field.build_vocab(self.train)
+            self.id_field.build_vocab(self.val, self.test, min_freq=1, specials=[])
+            self.edge_label_field.build_vocab(self.train)
+            self.edge_attribute_field.build_vocab(self.train)
 
         self.create_label_freqs(args)
         self.create_edge_freqs(args)
         self.create_property_freqs(args)
         self.create_top_freqs(args)
-
-        self.property_keys = self.property_field.keys
-        print("properties: ", self.property_field.keys)
+        
+        if build_vocab:
+            self.property_keys = self.property_field.keys
+        else:
+            self.property_field.keys = self.property_keys
+        print("properties: ", self.property_keys)
 
         print(f"Edge frequency: {self.edge_presence_freq*100:.2f} %")
         print(f"{len(self.relative_label_field.vocab)} words in the relative label vocabulary")
         print(f"{len(self.edge_label_field.vocab)} words in the edge label vocabulary")
         print(f"{len(self.char_form_field.vocab)} characters in the vocabulary")
-        print(f"{len(self.pos_field.vocab)} pos labels in the vocabulary")
-        print(f"{len(self.syn_field.vocab)} syn labels in the vocabulary")
+        if args.use_syn:
+            print(f"{len(self.pos_field.vocab)} pos labels in the vocabulary")
+            print(f"{len(self.syn_field.vocab)} syn labels in the vocabulary")
         
 
         Random(42).shuffle(self.train.examples)

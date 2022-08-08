@@ -32,7 +32,8 @@ if __name__ == "__main__":
     directory = initialize(args, create_directory=True, init_wandb=False, directory_prefix="inference_")
 
     dataset = SharedDataset(args)
-    dataset.load_datasets(args, 0, 1)
+    dataset.load_state_dict(args, checkpoint['dataset'])
+    dataset.load_datasets(args, 0, 1, build_vocab=False)
 
     model = Model(dataset, args).to(device)
     model.load_state_dict(checkpoint["model"])

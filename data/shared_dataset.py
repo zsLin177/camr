@@ -25,6 +25,7 @@ class SharedDataset:
         }
         self.framework_to_id = {(f, l): i for i, (f, l) in enumerate(args.frameworks)}
         self.id_to_framework = {i: (f, l) for i, (f, l) in enumerate(args.frameworks)}
+        self.args = args
 
     def load_state_dict(self, args, d):
         for key, dataset in self.child_datasets.items():
@@ -44,9 +45,9 @@ class SharedDataset:
         ]
         return torch.utils.data.DataLoader(ConcatDataset(datasets), batch_size=1, shuffle=False, collate_fn=Collate())
 
-    def load_datasets(self, args, gpu, n_gpus):
+    def load_datasets(self, args, gpu, n_gpus, build_vocab=True):
         for (framework, language), dataset in self.child_datasets.items():
-            dataset.load_dataset(args, gpu, n_gpus, framework, language)
+            dataset.load_dataset(args, gpu, n_gpus, framework, language, build_vocab=build_vocab)
 
         self.share_chars()
         self.share_vocabs(args)
@@ -111,8 +112,9 @@ class SharedDataset:
 
         self.char_form_vocab_size = len(form_vocab)
         self.char_lemma_vocab_size = len(lemma_vocab)
-        self.pos_vocab_size = len(dataset.pos_field.vocab)
-        self.syn_vocab_size = len(dataset.syn_field.vocab)
+        if self.args.use_syn:
+            self.pos_vocab_size = len(dataset.pos_field.vocab)
+            self.syn_vocab_size = len(dataset.syn_field.vocab)
 
     def share_vocabs(self, args):
         ucca_datasets = [dataset for (f, l), dataset in self.child_datasets.items() if f == "ucca"]
