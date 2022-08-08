@@ -47,6 +47,7 @@ class Params:
         self.n_layers = 3                            # number of layers in the decoder
         self.n_mixture_components = 15               # number of components in the mixture of softmaxes for the label output
         self.normalize = True                        # normalize inverted edge directions and labels
+        self.pretrained = None                       # whether to load a model trained on silver data
         self.query_length = 4                        # number of queries genereted for each word on the input
         self.pre_norm = True                         # use pre-normalized version of the transformer (as in Transformers without Tears)
         self.use_syn = False                         # whether to use syntax and pos

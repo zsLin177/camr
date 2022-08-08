@@ -18,6 +18,7 @@ from model.transformers.modeling_bert import BertModel
 from model.transformers.modeling_roberta import RobertaModel
 from model.module.char_embedding import CharEmbedding
 from supar.modules.mlp import MLP
+from supar.modules.lstm import VariationalLSTM
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 from utility.utils import create_padding_mask
 
@@ -83,7 +84,8 @@ class Encoder(nn.Module):
         if self.use_syn:
             self.pos_embedding = nn.Embedding(num_embeddings=dataset.pos_vocab_size, embedding_dim=args.char_embedding_size)
             self.syn_embedding = nn.Embedding(num_embeddings=dataset.syn_vocab_size, embedding_dim=args.char_embedding_size)
-            self.fusion_mlp = MLP(self.dim+args.char_embedding_size*2, self.dim, activation=False)
+            # self.fusion_mlp = MLP(self.dim+args.char_embedding_size*2, self.dim, activation=False)
+            self.fusion_lstm = VariationalLSTM(self.dim+args.char_embedding_size*2, self.dim//2, bidirectional=True, dropout=0.2)
 
         self.query_generator = QueryGenerator(self.dim, self.width_factor, len(args.frameworks))
         self.encoded_layer_norm = nn.LayerNorm(self.dim)
@@ -119,7 +121,14 @@ class Encoder(nn.Module):
             # [batch_size, seq_len, f_dim]
             pos_embed = self.pos_embedding(pos_input)
             syn_embed = self.syn_embedding(syn_input)
-            encoder_output = self.fusion_mlp(torch.cat((encoder_output, pos_embed, syn_embed), -1))
+            # encoder_output = self.fusion_mlp(torch.cat((encoder_output, pos_embed, syn_embed), -1))
+            # [batch_size, seq_len, f_dim*2]
+            s_input = torch.cat((pos_embed, syn_embed), -1)
+            lens = pos_input.ne(0).sum(1).tolist()
+            x = pack_padded_sequence(torch.cat((encoder_output, s_input), -1), lens, True, False)
+            x, _ = self.fusion_lstm(x)
+            # [batch_size, seq_len, dim]
+            encoder_output, _ = pad_packed_sequence(x, True, total_length=pos_input.shape[1])
 
         decoder_input = self.query_generator(encoder_output, frameworks)
 

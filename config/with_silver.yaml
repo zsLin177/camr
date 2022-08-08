@@ -1,0 +1,12 @@
+frameworks:
+- ["amr", "zho"]
+
+encoder: /opt/data/private/slzhou/PLMs/chinese-roberta-wwm-ext-large
+accumulation_steps: 1
+batch_size: 8
+query_length: 3
+use_syn: false
+add_fw: false
+pretrained: /opt/data/private/slzhou/slzhou@127/perin/outputs/08-05-22_03-24-00/best_checkpoint.h5
+encoder_learning_rate: 5.0e-6
+decoder_learning_rate: 5.0e-5
