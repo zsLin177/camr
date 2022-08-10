@@ -27,6 +27,7 @@ if __name__ == "__main__":
     checkpoint = torch.load(args.checkpoint)
     args = Params().load_state_dict(checkpoint["args"]).init_data_paths(args.data_directory)
     args.log_wandb = False
+    args.encoder = '/data4/slzhou/PLMs/chinese-roberta-wwm-ext-large'
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     directory = initialize(args, create_directory=True, init_wandb=False, directory_prefix="inference_")
@@ -35,8 +36,9 @@ if __name__ == "__main__":
     dataset.load_state_dict(args, checkpoint['dataset'])
     dataset.load_datasets(args, 0, 1, build_vocab=False)
 
-    model = Model(dataset, args).to(device)
+    model = Model(dataset, args)
     model.load_state_dict(checkpoint["model"])
+    model = model.to(device)
 
     print("inference of validation data", flush=True)
     predict(model, dataset.val, args.validation_data, args, directory, 0, run_evaluation=True, epoch=0)

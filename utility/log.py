@@ -140,12 +140,12 @@ class Log:
         if not self.args.save_checkpoints:
             return
 
+        model_state_dict = {k: v.cpu() for k, v in self.model.state_dict().items()}
         state = {
             "epoch": self.epoch,
             "dataset": self.dataset.state_dict(),
             "performance": performance,
-            "model": self.model.state_dict(),
-            "optimizer": self.optimizer.state_dict(),
+            "model": model_state_dict,
             "args": self.args.state_dict(),
         }
 

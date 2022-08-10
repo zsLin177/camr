@@ -1,4 +1,4 @@
-CUDA_VISIBLE_DEVICES=0 nohup python train.py --config config/chinese_rbt_large.yaml \
+CUDA_VISIBLE_DEVICES=0 python train.py --config config/chinese_rbt_large.yaml \
                                         --data_directory ccl2022 \
                                         --save_checkpoints \
-                                        --workers 1 > train_mytokenize_wosyn.log 2>&1 &
+                                        --workers 1

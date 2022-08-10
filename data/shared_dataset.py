@@ -68,7 +68,7 @@ class SharedDataset:
         val_datasets = [self.child_datasets[self.id_to_framework[i]].val for i in range(len(self.child_datasets))]
         self.val = torch.utils.data.DataLoader(
             ConcatDataset(val_datasets),
-            batch_size=16,
+            batch_size=8,
             shuffle=False,
             num_workers=args.workers,
             collate_fn=Collate(),
@@ -79,7 +79,7 @@ class SharedDataset:
         test_datasets = [self.child_datasets[self.id_to_framework[i]].test for i in range(len(self.child_datasets))]
         self.test = torch.utils.data.DataLoader(
             ConcatDataset(test_datasets),
-            batch_size=16,
+            batch_size=8,
             shuffle=False,
             num_workers=args.workers,
             collate_fn=Collate(),
