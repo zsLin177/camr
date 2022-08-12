@@ -57,7 +57,7 @@ class Params:
         # path to the training dataset
         self.training_data = {
             ("amr", "eng"): f"{base_dir}/2020/cf/training/amr.mrp",
-            ("amr", "zho"): f"{base_dir}/mytokenize_camr_train_fdomain.mrp",
+            ("amr", "zho"): f"{base_dir}/catdev_mytokenize_camr_train_fdomain.mrp",
             ("drg", "eng"): f"{base_dir}/2020/cf/training/drg.mrp",
             ("drg", "deu"): f"{base_dir}/2020/cl/training/drg.deu_train.mrp",
             ("eds", "eng"): f"{base_dir}/2020/cf/training/eds.mrp",
@@ -81,7 +81,7 @@ class Params:
         }
 
         if self.add_fw:
-            self.training_data[("amr", "zho")] = f"{base_dir}/addfw_mytokenize_camr_train_fdomain.mrp"
+            self.training_data[("amr", "zho")] = f"{base_dir}/addfw_catdev_mytokenize_camr_train_fdomain.mrp"
             self.validation_data[("amr", "zho")] = f"{base_dir}/addfw_mytokenize_camr_dev_fdomain.mrp"
 
         # path to the test dataset
@@ -122,10 +122,10 @@ class Params:
         return {k: self.__dict__[k] for k in members}
 
     def load(self, args):
-        self.init_data_paths(args.data_directory)
         with open(args.config, "r", encoding="utf-8") as f:
             params = yaml.load(f, Loader=yaml.FullLoader)
             self.load_state_dict(params)
+        self.init_data_paths(args.data_directory)
 
     def save(self, json_path):
         with open(json_path, "w", encoding="utf-8") as f:

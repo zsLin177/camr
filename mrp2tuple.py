@@ -49,6 +49,31 @@ def write_tuple_file(file_name, all_res, sent_ids):
                 line_lst = [sent_id, rel_dic['head'][1], rel_dic['head'][0], '-', rel_dic['rel'], rel_dic['fw_align'], rel_dic['fw'], rel_dic['tail'][1], rel_dic['tail'][0], '-']
                 f.write('\t'.join(line_lst)+'\n')
             f.write('\n')
+
+def n_write_tuple_file(file_name, res_dic, max_len_filename):
+    with open(max_len_filename, 'r', encoding='utf-8') as f:
+        orderd_sent_id_lst = []
+        for line in f.readlines():
+            if len(line) > 1:
+                s_id = line.strip().split('\t')[0]
+                orderd_sent_id_lst.append(s_id)
+
+
+    with open(file_name, 'w', encoding='utf-8') as f:
+        line_0 = '\t'.join(['句子编号', '节点编号1', '概念1', '同指节点1', '关系', '关系编号', '关系对齐词', '节点编号2', '概念2', '同指节点2'])
+        f.write(line_0+'\n')
+        line_1 = '\t'.join(['sid', 'nid1', 'concept1', 'coref1', 'rel', 'rid','ralign', 'nid2', 'concept2', 'coref2'])
+        f.write(line_1+'\n')
+        f.write('\n')
+
+        for sent_id in orderd_sent_id_lst:
+            sent_res = res_dic[sent_id]
+            for rel_dic in sent_res:
+                line_lst = [sent_id, rel_dic['head'][1], rel_dic['head'][0], '-', rel_dic['rel'], rel_dic['fw_align'], rel_dic['fw'], rel_dic['tail'][1], rel_dic['tail'][0], '-']
+                f.write('\t'.join(line_lst)+'\n')
+            f.write('\n')
+
+
         
 def get_rels(node_dic, top_id, relations, tokens):
     res = []
@@ -126,6 +151,8 @@ def normalize_concept_align(instances, attributes, sent):
     for _, id, label in instances:
         if label == 'name':
             name_con_label_dic[id] = 'name'
+        elif label == '[NULL]':
+            continue
         else:
             norm_con_label_dic[id] = label
     
@@ -137,8 +164,11 @@ def normalize_concept_align(instances, attributes, sent):
             continue
         if id in norm_con_label_dic:
             norm_con_attr_dic[id].append((attr_name, value))
-        else:
+        elif id in name_con_label_dic:
             name_con_attr_dic[id].append((attr_name, value))
+        else:
+            # id belongs to [NULL]
+            continue
     
     tokens = sent.split()
     outer_align = len(tokens)+10

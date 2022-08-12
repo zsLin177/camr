@@ -6,5 +6,5 @@ accumulation_steps: 1
 batch_size: 8
 query_length: 3
 use_syn: true
-decoder_learning_rate: 0.0001
+decoder_learning_rate: 0.0002
 add_fw: true
