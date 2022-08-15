@@ -87,6 +87,13 @@ class Dataset:
                 getattr(self, key).vocab = pickle.loads(value)
             else:
                 print(f'This new dataset has no attr {key}, ignore!')
+    
+    def get_vocabs_for_compare(self):
+        return {
+            "property vocabs": self.property_field.vocabs,
+            "property keys": self.property_keys,
+            "vocabs": {key: value.vocab for key, value in self.__dict__.items() if hasattr(value, "vocab")}
+        }
 
     def state_dict(self):
         return {
@@ -180,6 +187,8 @@ class Dataset:
                     "input": [("every_input", self.every_word_input_field), ("char_form_input", self.char_form_field)],
                     "bert input": ("input", self.bert_input_field),
                     "lemmas": [("every_lemma", self.every_lemma_field), ("char_lemma_input", self.char_lemma_field)],
+                    "pos": ("pos_input", self.pos_field),
+                    "syn": ("syn_input", self.syn_field),
                     "to scatter": ("input_scatter", self.scatter_field),
                     "token anchors": ("token_intervals", self.token_interval_field),
                     "id": ("id", self.id_field),

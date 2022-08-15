@@ -8,6 +8,7 @@ class Params:
         self.activation = "relu"                     # transformer (decoder) activation function, supported values: {'relu', 'gelu', 'sigmoid', 'mish'}
         self.add_fw = False                          # whether to predict functional words
         self.balance_loss_weights = True             # use weight loss balancing (GradNorm)
+        self.base_model = None                       # use the dataset field of base_model
         self.batch_size = 16                         # batch size (further divided into multiple GPUs)
         self.beta_2 = 0.98                           # beta 2 parameter for Adam(W) optimizer
         self.blank_weight = 1.0                      # weight of cross-entropy loss for predicting an empty label

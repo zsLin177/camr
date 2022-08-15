@@ -60,6 +60,43 @@ class AbstractHead(nn.Module):
 
         return self.loss(output, batch, matching, decoder_mask)
 
+    def get_labelp_anchorp(self, encoder_output, decoder_output, encoder_mask, decoder_mask, batch):
+        every_input, word_lens = batch["every_input"]
+        decoder_lens = self.query_length * word_lens
+        batch_size = every_input.size(0)
+
+        label_pred = self.forward_label(decoder_output, decoder_lens)
+        anchor_pred = self.forward_anchor(decoder_output, encoder_output, encoder_mask)  # shape: (B, T_l, T_w)
+
+        return label_pred, anchor_pred
+
+    def get_labels_anchors(self, avg_labelp, avg_anchorp, batch_size, word_lens, decoder_lens, decoder_output_lst):
+        labels, anchors = [[] for _ in range(batch_size)], [[] for _ in range(batch_size)]
+        for b in range(batch_size):
+            label_indices = self.inference_label(avg_labelp[b, :decoder_lens[b], :]).cpu()
+            for t in range(label_indices.size(0)):
+                relative_label_index = label_indices[t].item()
+                if relative_label_index == 0:
+                    continue
+                for decoder_output in decoder_output_lst:
+                    decoder_output[b, len(labels[b]), :] = decoder_output[b, t, :]
+                labels[b].append(relative_label_index)
+                if avg_anchorp is None:
+                    anchors[b].append(list(range(t // self.query_length, word_lens[b])))
+                else:
+                    anchors[b].append(self.inference_anchor(avg_anchorp[b, t, :word_lens[b]]).cpu())
+        
+        for decoder_output in decoder_output_lst:
+            decoder_output = decoder_output[:, : max(len(l) for l in labels), :]
+
+        return labels, anchors, decoder_output_lst
+    
+    def get_pro_top_edp_edl_eda(self, decoder_output):
+        properties = self.forward_property(decoder_output)
+        tops = self.forward_top(decoder_output)
+        edge_presence, edge_labels, edge_attributes = self.forward_edge(decoder_output)
+        return properties, tops, edge_presence, edge_labels, edge_attributes
+
     def predict(self, encoder_output, decoder_output, encoder_mask, decoder_mask, batch):
         every_input, word_lens = batch["every_input"]
         decoder_lens = self.query_length * word_lens
@@ -108,6 +145,26 @@ class AbstractHead(nn.Module):
         ]
 
         return outputs
+
+    def get_output(self, labels, anchors, properties, tops, edge_presence, edge_labels, edge_attributes, batch, word_lens, batch_size):
+        outputs = [
+            self.parser.parse({
+                "labels": labels[b],
+                "anchors": anchors[b],
+                "properties": self.inference_property(properties, b),
+                "tops": self.inference_top(tops, b),
+                "edge presence": self.inference_edge_presence(edge_presence, b),
+                "edge labels": self.inference_edge_label(edge_labels, b),
+                "edge attributes": self.inference_edge_attribute(edge_attributes, b),
+                "id": batch["id"][b].cpu(),
+                "lemmas": batch["every_lemma"][b, : word_lens[b]].cpu(),
+                "tokens": batch["every_input"][0][b, : word_lens[b]].cpu(),
+                "token intervals": batch["token_intervals"][b, :, :].cpu(),
+            })
+            for b in range(batch_size)
+        ]
+        return outputs
+
 
     def loss(self, output, batch, matching, decoder_mask):
         batch_size = batch["every_input"][0].size(0)

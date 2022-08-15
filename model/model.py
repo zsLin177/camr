@@ -51,6 +51,35 @@ class Model(nn.Module):
 
         self.share_weights()
 
+    def get_selected_inputs(self, batch, every_input, word_lens, decoder_lens, batch_size, input_len, device):
+        encoder_mask = create_padding_mask(batch_size, input_len, word_lens, device)
+        decoder_mask = create_padding_mask(batch_size, self.query_length * input_len, decoder_lens, device)
+
+        if self.args.use_syn:
+            encoder_output, decoder_input = self.encoder(
+                batch["input"], batch["char_form_input"], batch["char_lemma_input"], batch["input_scatter"], input_len, batch["framework"],
+                pos_input=batch["pos_input"], syn_input=batch["syn_input"], encoder_mask=encoder_mask
+            )
+        else:
+            encoder_output, decoder_input = self.encoder(
+                batch["input"], batch["char_form_input"], batch["char_lemma_input"], batch["input_scatter"], input_len, batch["framework"]
+            )
+        
+        decoder_output = self.decoder(decoder_input, encoder_output, decoder_mask, encoder_mask)
+
+        def select_inputs(indices):
+            return (
+                encoder_output.index_select(0, indices),
+                decoder_output.index_select(0, indices),
+                encoder_mask.index_select(0, indices),
+                decoder_mask.index_select(0, indices),
+                Batch.index_select(batch, indices),
+            )
+
+        indices = (batch["framework"] == 0).nonzero(as_tuple=False).flatten()
+        
+        return select_inputs(indices)
+        
     def forward(self, batch, inference=False):
         every_input, word_lens = batch["every_input"]
         decoder_lens = self.query_length * word_lens

@@ -27,7 +27,7 @@ if __name__ == "__main__":
     checkpoint = torch.load(args.checkpoint)
     args = Params().load_state_dict(checkpoint["args"]).init_data_paths(args.data_directory)
     args.log_wandb = False
-    args.encoder = '/data4/slzhou/PLMs/chinese-roberta-wwm-ext-large'
+    # args.encoder = '/data4/slzhou/PLMs/chinese-roberta-wwm-ext-large'
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     directory = initialize(args, create_directory=True, init_wandb=False, directory_prefix="inference_")

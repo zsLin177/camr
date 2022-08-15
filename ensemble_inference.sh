@@ -1,0 +1,1 @@
+CUDA_VISIBLE_DEVICES=0 python ensemble_inference.py --dir outputs/tmp_ensemble --data_directory ccl2022

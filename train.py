@@ -68,13 +68,19 @@ def main_worker(gpu, n_gpus_per_node, args):
 
     dataset = SharedDataset(args)
     # dataset.load_datasets(args, gpu, n_gpus_per_node)
-
+    
     if args.pretrained is not None:
+        # it's used for big data and finetuning
         checkpoint = torch.load(args.pretrained)
         dataset.load_state_dict(args, checkpoint['dataset'])
         dataset.load_datasets(args, gpu, n_gpus_per_node, build_vocab=False)
         model = Model(dataset, args)
         model.load_state_dict(checkpoint['model'])
+    elif args.base_model is not None:
+        # use the same field (vocab), for the sake of logits-level ensemble
+        dataset.load_state_dict(args, torch.load(args.base_model)['dataset'])
+        dataset.load_datasets(args, gpu, n_gpus_per_node, build_vocab=False)
+        model = Model(dataset, args)
     else:
         dataset.load_datasets(args, gpu, n_gpus_per_node)
         model = Model(dataset, args)
