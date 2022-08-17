@@ -22,3 +22,9 @@ CUDA_VISIBLE_DEVICES=0 nohup python train.py --config config/ens_addfw_syn_chine
                                         --save_checkpoints \
                                         --workers 1 > ens_train_catdev_lstm_syn_addfw_s123_lr1.5.log 2>&1 &
                                         (62668)
+
+CUDA_VISIBLE_DEVICES=4,5 nohup python train.py --config config/ens_addfw_syn_chinese_rbt_large.yaml \
+                                        --data_directory ccl2022 \
+                                        --save_checkpoints \
+                                        --workers 1 > ens_train_catdev_lstm_syn_addfw_s122_lr1.5.log 2>&1 &
+                                        (41447)

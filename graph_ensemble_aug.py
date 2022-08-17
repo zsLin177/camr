@@ -37,7 +37,10 @@ def get_map(g1, g2):
 
 def ensemble(graph_lst):
     assert len(graph_lst) > 1
-    threshold = math.ceil(len(graph_lst)//2)
+    # threshold = math.ceil(len(graph_lst)//2)
+    global th_rate
+    print('th_rate', th_rate)
+    threshold = len(graph_lst) * th_rate
     max_support = 0
     ge_node_tab, ge_edge_tab, ge_attr_tab = None, None, None
     for i, g_pivot in enumerate(graph_lst):
@@ -227,9 +230,9 @@ def initialise(graph, prefix, values={"tops", "labels", "properties", "anchors",
 
         return node_tab, edge_tab, attr_tab, attributes, relations
 
-def main(dir_path, len_file):
+def main(dir_path, len_file, outname):
     global all_sent_res_dic
-    ens_file_name = 'ens.tup'
+    ens_file_name = outname
     out_file_name = os.path.join(dir_path, ens_file_name)
     if ens_file_name in os.listdir(dir_path):
         print('ensemble file exists')
@@ -281,6 +284,10 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--dir", type=str, required=True, help="the directory containing all predictions in form of mrp")
     parser.add_argument("--len_file", type=str, required=True, help="the file of max_len")
+    parser.add_argument("--outname", type=str, default='ens.tup', help="name of outfile")
+    parser.add_argument("--th_rate", type=float, default=0.5, help="rate of threshold")
     args = parser.parse_args()
+    global th_rate
+    th_rate = args.th_rate
 
-    main(args.dir, args.len_file)
+    main(args.dir, args.len_file, args.outname)
