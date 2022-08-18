@@ -125,18 +125,48 @@ def match_fw(fw, tokens, head_align_str, tail_align_str):
             return core_idx + 1 - 1
         else:
             return core_idx + 1 + 1
-    
+
+# def find(fw, tokens, core_idx):
+#     if tokens[core_idx] == fw:
+#         return core_idx
+#     # find behind first
+#     if fw in tokens[core_idx+1:]:
+#         return tokens.index(fw, core_idx+1)
+#     if fw in tokens[0: core_idx]:
+#         reversed_lst = list(reversed(tokens[0: core_idx]))
+#         return len(reversed_lst) - 1 - reversed_lst.index(fw)
+#     # not finded
+#     return -1
+
 def find(fw, tokens, core_idx):
     if tokens[core_idx] == fw:
         return core_idx
+    behind_res = None
     # find behind first
     if fw in tokens[core_idx+1:]:
-        return tokens.index(fw, core_idx+1)
+        behind_res = tokens.index(fw, core_idx+1)
+        # return tokens.index(fw, core_idx+1)
+    
+    before_res = None
     if fw in tokens[0: core_idx]:
         reversed_lst = list(reversed(tokens[0: core_idx]))
-        return len(reversed_lst) - 1 - reversed_lst.index(fw)
-    # not finded
-    return -1
+        before_res = len(reversed_lst) - 1 - reversed_lst.index(fw)
+        # return len(reversed_lst) - 1 - reversed_lst.index(fw)
+
+    if before_res is None and behind_res is None:
+        # not finded
+        return -1
+    elif before_res is None:
+        return behind_res
+    elif behind_res is None:
+        return before_res
+    else:
+        behind_distance = behind_res - core_idx
+        before_distance = core_idx - before_res
+        if behind_distance <= before_res:
+            return behind_res
+        else:
+            return before_res
 
 
 def normalize_concept_align(instances, attributes, sent):
@@ -233,7 +263,7 @@ def normalize_concept_align(instances, attributes, sent):
                 op_lst.append((attr_name, value))
             else:
                 # raise ValueError(f'name concept id: {id} label: {label} has {attr_name}')
-                print(f'name concept id: {id} label: {label} has {attr_name}: {value}')
+                print(f'name concept id: {id} label: {label} has {attr_name}: {value}. This attr is been ignored.')
                 continue
         if len(op_lst) > 0:
             op_lst = sorted(op_lst, key=lambda x:x[0])
