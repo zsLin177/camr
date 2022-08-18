@@ -272,20 +272,23 @@ class Dataset:
         print(f"{self.node_count} nodes in the train split")
 
         if build_vocab:
-            self.every_word_input_field.build_vocab(self.val, self.test, min_freq=1, specials=[self.pad, self.unk, self.sos, self.eos])
+            # self.every_word_input_field.build_vocab(self.val, self.test, min_freq=1, specials=[self.pad, self.unk, self.sos, self.eos])
             self.char_form_field.build_vocab(self.train, min_freq=1, specials=[self.pad, self.unk, self.sos, self.eos])
             self.char_lemma_field.build_vocab(self.train, min_freq=1, specials=[self.pad, self.unk, self.sos, self.eos])
             if args.use_syn:
                 self.pos_field.build_vocab(self.train, min_freq=1, specials=[self.pad, self.unk, self.sos, self.eos])
                 self.syn_field.build_vocab(self.train, min_freq=1, specials=[self.pad, self.unk, self.sos, self.eos])
-            self.every_lemma_field.build_vocab(self.val, self.test, min_freq=1, specials=[self.pad, self.unk, self.sos, self.eos])
+            # self.every_lemma_field.build_vocab(self.val, self.test, min_freq=1, specials=[self.pad, self.unk, self.sos, self.eos])
             self.label_field.build_vocab(self.train, min_freq=1, specials=[])
             self.property_field.build_vocab(self.train)
             self.relative_label_field.build_vocab(self.train)
-            self.id_field.build_vocab(self.val, self.test, min_freq=1, specials=[])
+            # self.id_field.build_vocab(self.val, self.test, min_freq=1, specials=[])
             self.edge_label_field.build_vocab(self.train)
             self.edge_attribute_field.build_vocab(self.train)
-
+        
+        self.every_lemma_field.build_vocab(self.val, self.test, min_freq=1, specials=[self.pad, self.unk, self.sos, self.eos])
+        self.every_word_input_field.build_vocab(self.val, self.test, min_freq=1, specials=[self.pad, self.unk, self.sos, self.eos])
+        self.id_field.build_vocab(self.val, self.test, min_freq=1, specials=[])
         self.create_label_freqs(args)
         self.create_edge_freqs(args)
         self.create_property_freqs(args)

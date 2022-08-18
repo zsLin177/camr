@@ -1,1 +1,1 @@
-CUDA_VISIBLE_DEVICES=4 python inference.py --checkpoint outputs/ensemble_addfw_wisyn/s122_lr1.5.model  --data_directory ccl2022
+CUDA_VISIBLE_DEVICES=6 python inference.py --checkpoint outputs/ensemble_addfw_wisyn/s123_lr1.5.model  --data_directory ccl2022
