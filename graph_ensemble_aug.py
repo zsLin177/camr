@@ -148,11 +148,15 @@ def filter_tab(c_node_tab, c_edge_tab, c_attr_tab, top_node_id, threshold):
     need_del_nodes = []
     for c_node_id in c_node_tab.keys():
         if c_node_id == top_node_id:
-            if 'name' in c_node_tab[c_node_id]:
+            if 'name' in c_node_tab[c_node_id] and len(c_node_tab[c_node_id]) > 1:
                 c_node_tab[c_node_id].pop('name')
             label_count_dic = c_node_tab[c_node_id]
-            new_label_count_dic = {max(label_count_dic): label_count_dic[max(label_count_dic)]}
-            support_sum += label_count_dic[max(label_count_dic)]
+            try:
+                new_label_count_dic = {max(label_count_dic): label_count_dic[max(label_count_dic)]}
+                support_sum += label_count_dic[max(label_count_dic)]
+            except:
+                import pdb
+                pdb.set_trace()
             c_node_tab[c_node_id] = new_label_count_dic
             continue
 
@@ -248,7 +252,7 @@ def main(dir_path, len_file, outname):
     send_ids = list(all_pred_res[0].keys())
     
 
-    n_cpus = 10
+    n_cpus = 20
     all_input_dict = []
     for sent_id in send_ids:
         this_dict = {}

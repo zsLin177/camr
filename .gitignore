@@ -7,3 +7,6 @@ wandb
 Chinese-AMR
 preds-*
 wisyn_testa_graph_ens
+wosyn_graph_ens
+testa_graph_ens
+SUDA*
