@@ -68,7 +68,7 @@ class SharedDataset:
         val_datasets = [self.child_datasets[self.id_to_framework[i]].val for i in range(len(self.child_datasets))]
         self.val = torch.utils.data.DataLoader(
             ConcatDataset(val_datasets),
-            batch_size=8,
+            batch_size=1,
             shuffle=False,
             num_workers=args.workers,
             collate_fn=Collate(),

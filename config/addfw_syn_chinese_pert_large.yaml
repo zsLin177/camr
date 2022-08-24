@@ -1,0 +1,10 @@
+frameworks:
+- ["amr", "zho"]
+
+encoder: /data/slzhou/PLMs/chinese-pert-large
+accumulation_steps: 1
+batch_size: 8
+query_length: 3
+use_syn: true
+decoder_learning_rate: 1.5e-4
+add_fw: true

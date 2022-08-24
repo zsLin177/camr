@@ -68,13 +68,40 @@ def n_write_tuple_file(file_name, res_dic, max_len_filename):
 
         for sent_id in orderd_sent_id_lst:
             sent_res = res_dic[sent_id]
+            xid2label = {}
             for rel_dic in sent_res:
-                line_lst = [sent_id, rel_dic['head'][1], rel_dic['head'][0], '-', rel_dic['rel'], rel_dic['fw_align'], rel_dic['fw'], rel_dic['tail'][1], rel_dic['tail'][0], '-']
+                h_xid, h_label, t_xid, t_label = rel_dic['head'][1], rel_dic['head'][0], rel_dic['tail'][1],rel_dic['tail'][0]
+                if h_xid not in xid2label and not h_label.startswith('x'):
+                    xid2label[h_xid] = h_label
+                if t_xid not in xid2label and not t_label.startswith('x'):
+                    xid2label[t_xid] = t_label
+            for rel_dic in sent_res:
+                h_xid, h_label, t_xid, t_label = rel_dic['head'][1], rel_dic['head'][0], rel_dic['tail'][1],rel_dic['tail'][0]
+                h_corf, t_corf = '-', '-'
+                # if h_label.startswith('x'):
+                #     if h_label in xid2label:
+                #         h_corf = h_label
+                #         h_label = xid2label[h_label]
+                #     else:
+                #         h_label = 'amr-unknown'
+
+                if h_label.startswith('x'):
+                    h_label = 'amr-unknown'
+
+                # if t_label.startswith('x'):
+                #     if t_label in xid2label:
+                #         t_corf = t_label
+                #         t_label = xid2label[t_label]
+                #     else:
+                #         t_label = 'amr-unknown'
+
+                if t_label.startswith('x'):
+                    t_label = 'amr-unknown'
+                line_lst = [sent_id, h_xid, h_label, h_corf, rel_dic['rel'], rel_dic['fw_align'], rel_dic['fw'], t_xid, t_label, t_corf]
                 f.write('\t'.join(line_lst)+'\n')
             f.write('\n')
 
 
-        
 def get_rels(node_dic, top_id, relations, tokens):
     res = []
     res.append({'head': ('root', 'x0'), 'tail': node_dic[top_id], 'rel': ':top', 'fw':'-', 'fw_align': '-'})

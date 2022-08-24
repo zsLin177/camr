@@ -51,6 +51,25 @@ def read_tup_file(file_name):
 
     return output_order
 
+def check_label(file_name):
+    with open(file_name, 'r') as f:
+        for i in range(3):
+            f.readline()
+        line_lsts = [line.strip().split('\t') for line in f]
+        
+        sentence_tup_lsts = []
+        start, i = 0, 0
+        for line in line_lsts:
+            if len(line) == 1:
+                sentence_tup_lsts.append(line_lsts[start:i])
+                start = i + 1
+            i += 1
+
+        for sent_tup_lst in sentence_tup_lsts:
+            for tup_lst in sent_tup_lst:
+                if tup_lst[2].startswith('x') or tup_lst[8].startswith('x'):
+                    print(tup_lst)
+        
 
 if __name__ == '__main__':
     # testa_mrp_file_name = 'mtool/data/sample/camr/camr_test_fdomain.mrp'
