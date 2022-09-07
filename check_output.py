@@ -68,6 +68,11 @@ def check_label(file_name):
         for sent_tup_lst in sentence_tup_lsts:
             for tup_lst in sent_tup_lst:
                 if tup_lst[2].startswith('x') or tup_lst[8].startswith('x'):
+                    print('label error')
+                    print(tup_lst)
+
+                if tup_lst[3] != '-' or tup_lst[9] != '-':
+                    print('coref exists')
                     print(tup_lst)
         
 
@@ -77,18 +82,20 @@ if __name__ == '__main__':
     # new_tesea_mrp_file = 'ccl2022/pseudo_testa_fdomain.mrp'
     # reorder_mrp(testa_mrp_file_name, testa_max_len_file, new_tesea_mrp_file)
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--output", type=str, required=True, help="the output tup file")
-    parser.add_argument("--len_file", type=str, required=True, help="the file of max_len")
-    args = parser.parse_args()
+    # parser = argparse.ArgumentParser()
+    # parser.add_argument("--output", type=str, required=True, help="the output tup file")
+    # parser.add_argument("--len_file", type=str, required=True, help="the file of max_len")
+    # args = parser.parse_args()
 
-    gold_order_sid = read_maxlen_file(args.len_file)
-    pred_order_sid = read_tup_file(args.output)
+    # gold_order_sid = read_maxlen_file(args.len_file)
+    # pred_order_sid = read_tup_file(args.output)
 
-    if gold_order_sid == pred_order_sid:
-        print('Yes! They have same number of sentences and the order is right.')
-    else:
-        print('False! Have problems!!!')
+    # if gold_order_sid == pred_order_sid:
+    #     print('Yes! They have same number of sentences and the order is right.')
+    # else:
+    #     print('False! Have problems!!!')
+
+    check_label('wisyn_testb_graph_ens/testb_2.tup')
     
 
 
