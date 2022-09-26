@@ -1,5 +1,6 @@
 # SUDA-HUAWEI at CAMR2022
 This repository contains the system we submitted at [CAMR2022](https://github.com/GoThereGit/Chinese-AMR). Our model is built based on [PERIN](https://github.com/ufal/perin).
+Report is supported [here](CAMR_SUDA_HUAWEI.pdf).
 
 ## Install
 The installation is mostly the same as Perin, except the mtool.
