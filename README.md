@@ -28,7 +28,7 @@ python preprocess/add_fw.py --tup_train ccl2022/camr_official/camr_tuples/tuples
 # add pos and syn
 python preprocess/add_pos-syn.py --mrp ccl2022/addfw_camr_dev_fdomain.mrp \
                                  --conllu ccl2022/camr_official/camr_dev.txt.out.conllu \
-                                 --out ccl2022/mytokenize_camr_dev_fdomain.mrp
+                                 --out ccl2022/addfw_mytokenize_camr_dev_fdomain.mrp
 
 ```
 
